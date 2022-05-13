@@ -13,7 +13,7 @@ from utility.json_result_handler import JsonResultReader
 from utility.utility import HIGHLIGHT, CEND
 
 DEFAULT_DIR_DATA = utility.create_dirs(f"../out")
-DIR_PLOT = utility.create_dirs(f"../out/plots")
+DIR_PLOT = utility.create_dirs(f"../out/plots/alg1")
 
 # plot settings
 SMALL_SIZE = 14
@@ -26,16 +26,7 @@ plt.rc('ytick', labelsize=SMALL_SIZE)
 plt.rc('figure', titlesize=TITLE_SIZE)
 
 # maps each algorithm to a color
-algo_c_map = {
-    '1WP_D': "seagreen",
-    '1WP_C': "darkgreen",
-    '2WP_D':"mediumvioletred",
-    '2WP_C':"darkmagenta",
-    '3WP_D':"bisque",
-    '3WP_C':"goldenrod",
-    '4WP_D': "cornflowerblue",
-    '4WP_C': "darkblue"
-}
+algo_c_map = dict()
 
 # maps display name to internal name of topologies
 top_n_map = {
@@ -92,6 +83,39 @@ top_n_map = {
     "atmnet": "Atmnet"
 }
 
+
+def create_algo_c_map(plot_type:str):
+    algo_map=dict()
+    if plot_type.startswith("all_algorithms"):
+        algo_map = {
+            'UnitWeights': "grey",
+            'InverseCapacity': "skyblue",
+            'HeurOSPF': "cornflowerblue",
+            'GreedyWaypoints': "hotpink",
+            'JointHeur': "seagreen",
+            '4C-JointHeur': "salmon",
+        }
+    elif plot_type.startswith("all_topologies"):
+        algo_map = {
+            'HeurOSPF': "cornflowerblue",
+            'GreedyWaypoints': "hotpink",
+            'JointHeur': "seagreen",
+            '4C-JointHeur': "salmon",
+        }
+    elif plot_type.startswith("real_demands"):
+        algo_map = {
+            'HeurOSPF': "cornflowerblue",
+            'GreedyWaypoints': "hotpink",
+            'JointHeur': "seagreen",
+            '1C-JointHeur': "mediumseagreen",
+            '2D-JointHeur': "darkviolet",
+            '2C-JointHeur': "mediumorchid",
+            '3D-JointHeur': "darkgoldenrod",
+            '3C-JointHeur': "goldenrod",
+            '4D-JointHeur': "indianred",
+            '4C-JointHeur': "salmon",
+        }
+    return algo_map
 
 def add_vertical_algorithm_labels(ax):
     """ Computes the position of the vertical algorithm labels and adds them to the plot """
@@ -202,17 +226,22 @@ def prepare_data_and_plot(df, title, plot_type):
     df = df[df["algorithm"] != "valiants_trick"]
 
     # for the 'all algorithm plot' (including ilps) show only abilene
-    if plot_type.startswith("all_algorithms"):
-        df = df[(df["topology_name"] == "abilene")]
+    #if plot_type.startswith("all_algorithms"):
+    #    df = df[(df["topology_name"] == "abilene")]
 
     if not plot_type.startswith("all_algorithms"):
         df = df[df["algorithm"] != "uniform_weights"]
 
-        ignored_algorithms = ['ILP Weights', 'UnitWeights', 'ILP Waypoints', 'ILP Joint']
-        for algo in ignored_algorithms:
-            if algo in algo_c_map:
-                algo_c_map.pop(algo)
+    if plot_type.startswith("all_topologies"):
+        df = df[df["algorithm"] != "inverse_capacity"]
 
+
+    df = df[df["algorithm"] != "kwpo_jointheur_0d"]
+    df = df[df["algorithm"] != "kwpo_jointheur_1d"]
+    df = df[df["algorithm"] != "kwpo_jointheur_0c"]
+
+    global algo_c_map
+    algo_c_map=create_algo_c_map(plot_type)
     # beautify algorithm names
     df["algorithm"] = df["algorithm"].str.replace("_", " ").str.title().str.replace(" ", "")
     df["ilp_method"] = df["ilp_method"].str.replace("_", " ").str.title().str.replace(" ", "")
@@ -222,16 +251,13 @@ def prepare_data_and_plot(df, title, plot_type):
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("SegmentIlp", "ILP")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("DemandFirstWaypoints", "GreedyWaypoints")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("SequentialCombination", "JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("4Waypointsc", "4WP_C")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("1Waypointsc", "1WP_C")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("2Waypointsc", "2WP_C")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("3Waypointsc", "3WP_C")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("4Waypoints", "4WP_D")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("1Waypoints", "1WP_D")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("2Waypoints", "2WP_D")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("3Waypoints", "3WP_D")
-
-    #df["algorithm_complete"] = df["algorithm_complete"].str.replace("MultiWaypoints", "Multi")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur4C", "4C-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur4D", "4D-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur3C", "3C-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur3D", "3D-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2C", "2C-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2D", "2D-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur1C", "1C-JointHeur")
 
     # beautify topology names
     df["topology_name"] = df["topology_name"].apply(lambda x: top_n_map[x])
@@ -260,33 +286,28 @@ def prepare_data_and_plot(df, title, plot_type):
     print("Plot files:")
     if plot_type.startswith("all_topologies"):
         # PLOT FIGURE 3
-        df1 = df[df["topology_name"] < "JanetLense"]
-        df2 = df[df["topology_name"] >= "JanetLense"]
-        df2 = df2[df2["topology_name"] < "Pdh"]
-        df3 = df[df["topology_name"] >= "Pdh"]
-        for i, df_i in enumerate([df1, df2, df3]):
-            width = 6 + 1.5 * df_i['topology_name'].nunique()
-
-            y_lim_top = 8.5
-            plot_file = os.path.join(out_path, f"{plot_type}_{i}.pdf")
-            create_box_plot(df_i, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
-                            y_label="Max. Normalized Link Utilization", fig_size=(width, 8),
-                            title=title if i == 0 else "", y_lim_top=y_lim_top)
-
-        df = filter_biggest_12_topologies(df)
         width = 6 + 1.5 * df['topology_name'].nunique()
 
-        y_lim_top = 5.1
-        plot_file = os.path.join(out_path, f"12_biggest_of_{plot_type}.pdf")
+        y_lim_top = 8.5
+        plot_file = os.path.join(out_path, f"kwpo_{plot_type}.pdf")
         create_box_plot(df, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
-                        y_label="Max. Normalized Link Utilization", fig_size=(width, 8), title=title,
-                        y_lim_top=y_lim_top)
+                        y_label="Max. Normalized Link Utilization", fig_size=(width, 8),
+                        title=title, y_lim_top=y_lim_top)
+
+        # df = filter_biggest_12_topologies(df)
+        # width = 6 + 1.5 * df['topology_name'].nunique()
+        #
+        # y_lim_top = 5.1
+        # plot_file = os.path.join(out_path, f"12_biggest_of_{plot_type}.pdf")
+        # create_box_plot(df, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
+        #                 y_label="Max. Normalized Link Utilization", fig_size=(width, 8), title=title,
+        #                 y_lim_top=y_lim_top)
     else:
         # PLOT FIGURE 4 + 5
-        y_lim_top = None
-        plot_file = os.path.join(out_path, f"{plot_type}.pdf")
+        y_lim_top = 5 if plot_type.startswith("all_algorithms") else 2.5 #None
+        plot_file = os.path.join(out_path, f"kwpo_{plot_type}.pdf")
         if plot_type == "all_algorithms":
-            plot_file = os.path.join(out_path, f"all_algorithms_abilene.pdf")
+            plot_file = os.path.join(out_path, f"kwpo_all_algorithms_geant.pdf")
         create_box_plot(df, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
                         y_label="Max. Normalized Link Utilization", fig_size=(8, 6), title=title,
                         y_lim_top=y_lim_top)
@@ -308,14 +329,29 @@ if __name__ == "__main__":
     raw_dfs_title = list()
 
     # fetch results from file and create dataframe
+    # figure (all_algorithms)
+    data_all_algorithm = os.path.join(dir_data, "results_kwpo_all_algorithms.json")
+    if os.path.exists(data_all_algorithm):
+        df_all_algorithms = pd.DataFrame(JsonResultReader(data_all_algorithm).fetch_results())
+        raw_dfs_title.append((df_all_algorithms, "MCF Synthetic Demands", "all_algorithms"))
+    else:
+        print(f"{utility.FAIL}results_kwpo_all_algorithms.json not existing in {dir_data}{utility.CEND}")
+
+    # figure (all_topologies)
+    data_all_topologies = os.path.join(dir_data, "results_kwpo_all_topologies.json")
+    if os.path.exists(data_all_topologies):
+        df_all_topologies = pd.DataFrame(JsonResultReader(data_all_topologies).fetch_results())
+        raw_dfs_title.append((df_all_topologies, "MCF Synthetic Demands", "all_topologies"))
+    else:
+        print(f"{utility.FAIL}results_all_topologies.json not existing in {dir_data}{utility.CEND}")
+
     # figure (real_demands)
-    data_multi_waypoints = os.path.join(dir_data, "results_multi_waypoints.json")
-    if os.path.exists(data_multi_waypoints):
-        df_multi_waypoints = pd.DataFrame(JsonResultReader(data_multi_waypoints).fetch_results())
-        raw_dfs_title.append((df_multi_waypoints, "Scaled Real Demands - OC", "multi_waypoints"))
+    data_real_demands = os.path.join(dir_data, "results_kwpo_real_demands.json")
+    if os.path.exists(data_real_demands):
+        df_real_demands = pd.DataFrame(JsonResultReader(data_real_demands).fetch_results())
+        raw_dfs_title.append((df_real_demands, "Scaled Real Demands", "real_demands"))
     else:
         print(f"{utility.FAIL}results_real_demands.json not existing in {dir_data}{utility.CEND}")
-
     # start plot process for each dataframe
     for df_i, title_i, plot_type_i in raw_dfs_title:
         print(f"{HIGHLIGHT}{title_i} - {plot_type_i}{CEND}")

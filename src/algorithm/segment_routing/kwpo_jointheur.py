@@ -1,65 +1,24 @@
-from algorithm.generic_sr import GenericSR
+from ..generic_sr import GenericSR
 import time
 import numpy as np
 from .demand_first_waypoints import DemandsFirstWaypoints
+from ..sr_factory import  get_algorithm
+from enum import Enum
 
-class MultiWayPoints(GenericSR):
 
-    seed = 42
-
-    def __init__(self, nodes: list, links: list, demands: list, weights: dict = None, k: int=1, oc: bool=False, **kwargs):
-        super().__init__(nodes, links, demands, weights, None)
-
-        self.__nodes = nodes  # [i, ..., n-1]
-        self.__links = links  # [(i, j, capacity), ...]
-        self.__demands = demands  # [(src, dst, demand), ...]
-        self.__max_waypoints = k
-        self.__oc=oc
-
-    def solve(self) -> dict:
-        """
-        sequential combination of two arbitrary sr algorithms to compute
-        first optimal weight setting and then waypoints or vice versa
-        """
-        from algorithm.sr_factory import get_algorithm
-
-        solution_list=list()
-        current_demands = self.__demands
-
-        # route on shortest paths
-        heur_ospf = get_algorithm(algorithm_name="heur_ospf_weights",demands=current_demands, nodes=self.__nodes,
-                              links=self.__links)
-        solution_ospf = heur_ospf.solve()
-        current_weights = solution_ospf['weights']
-        solution_list.append(solution_ospf)
-
-        for i in range(self.__max_waypoints):
-            single_waypoint = SingleWayPointHeur(nodes=self.__nodes,links=self.__links, demands=current_demands,weights=current_weights, oc=self.__oc)
-            solution_wp = single_waypoint.solve()
-
-            current_solution= dict(solution_list[-1])
-            current_demands=solution_wp['waypoints_demand']
-            current_solution["execution_time"] += solution_wp["execution_time"]
-            current_solution["process_time"] += solution_wp["process_time"]
-            current_solution["objective"] = solution_wp["objective"]
-            current_solution["loads"] = solution_wp["loads"]
-            solution_list.append(current_solution)
-
-        return solution_list
-
-    def get_name(self):
-        """ returns name of algorithm """
-        return f"multi_waypoints"
-
+class SortSetting(Enum):
+    ByDemandValue=0
+    ByCapacity=1
 
 class SingleWayPointHeur(DemandsFirstWaypoints):
 
     SORT_CHUNKS = 1
 
-    def __init__(self, nodes: list, links: list, demands: list, weights: dict = None, waypoints: dict = None,oc:bool = False, **kwargs):
+    def __init__(self, nodes: list, links: list, demands: list, weights: dict = None, waypoints: dict = None,
+                 sortStrat:SortSetting=SortSetting.ByDemandValue, **kwargs):
         super().__init__(nodes, links, demands, weights, waypoints)
         self.__node_capacities = self.extract_nodes_capacities(links)
-        self.__oc=oc
+        self.__sortStrat=sortStrat
 
     def extract_nodes_capacities(self, links):
         nodes_capacity = dict()
@@ -77,13 +36,13 @@ class SingleWayPointHeur(DemandsFirstWaypoints):
     def calc_pair_capacity(self, pair):
         return self.__node_capacities[pair[0]] + self.__node_capacities[pair[1]]
 
-    def extract_sorted_ids(self, demands: dict, sortbycap: bool = False):
+    def extract_sorted_ids(self, demands: dict):
 
         sorted_ids = dict(zip(range(len(self._DemandsFirstWaypoints__demands)),
                  np.array(self._DemandsFirstWaypoints__demands)[:, 2].argsort()[::-1]))
         sorted_ids = list(sorted_ids.values())
 
-        if sortbycap:
+        if self.__sortStrat==SortSetting.ByCapacity:
             tmp= sorted_ids.copy()
             chunk_size=np.floor_divide(len(tmp),self.SORT_CHUNKS)
             if chunk_size > 0:
@@ -105,7 +64,7 @@ class SingleWayPointHeur(DemandsFirstWaypoints):
 
         waypoints = dict()
         waypoints_demand=list()
-        sorted_demand_idx_map = self.extract_sorted_ids(self._DemandsFirstWaypoints__demands,self.__oc)
+        sorted_demand_idx_map = self.extract_sorted_ids(self._DemandsFirstWaypoints__demands)
         for d_map_idx in range(len(self._DemandsFirstWaypoints__demands)):
             d_idx = sorted_demand_idx_map[d_map_idx]
             s, t, d = self._DemandsFirstWaypoints__demands[d_idx]
@@ -128,7 +87,6 @@ class SingleWayPointHeur(DemandsFirstWaypoints):
                     waypoints_demand.append((s,best_waypoint,d))
                     waypoints_demand.append((best_waypoint, t, d))
             else:
-                #waypoints[d_idx] = (s, t)
                 waypoints_demand.append((s,t,d))
         loads = {(u, v): best_util_map[u][v] for u, v, in self._DemandsFirstWaypoints__links}
         return loads, waypoints, best_objective, waypoints_demand
@@ -136,7 +94,7 @@ class SingleWayPointHeur(DemandsFirstWaypoints):
     def solve(self) -> dict:
         """ compute solution """
 
-        self.__start_time = t_start = time.time()  # sys wide time
+        t_start = time.time()  # sys wide time
         pt_start = time.process_time()  # count process time (e.g. sleep excluded and count per core)
         loads, waypoints, objective,waypoints_demand = self.__demands_first_waypoints()
         pt_duration = time.process_time() - pt_start
@@ -153,3 +111,51 @@ class SingleWayPointHeur(DemandsFirstWaypoints):
         }
 
         return solution
+
+class KWPOJointHeur(GenericSR):
+
+    seed = 42
+
+    def __init__(self, nodes: list, links: list, demands: list, weights: dict = None, k: int=1,
+                 sortStrat:SortSetting=SortSetting.ByDemandValue, **kwargs):
+        super().__init__(nodes, links, demands, weights, None)
+
+        self.__nodes = nodes  # [i, ..., n-1]
+        self.__links = links  # [(i, j, capacity), ...]
+        self.__demands = demands  # [(src, dst, demand), ...]
+        self.__max_waypoints = k
+        self.__sortStrat=sortStrat
+
+    def solve(self) -> dict:
+        """
+        sequential combination of two arbitrary sr algorithms to compute
+        first optimal weight setting and then waypoints or vice versa
+        """
+
+        solution_list=list()
+        current_demands = self.__demands
+
+        # route on shortest paths
+        heur_ospf = get_algorithm(algorithm_name="heur_ospf_weights",demands=current_demands, nodes=self.__nodes,
+                              links=self.__links)
+        solution_ospf = heur_ospf.solve()
+        solution_list.append(solution_ospf)
+
+        for i in range(self.__max_waypoints):
+            single_waypoint = SingleWayPointHeur(nodes=self.__nodes,links=self.__links, demands=current_demands,
+                                                 weights=solution_ospf['weights'], sortStrat=self.__sortStrat)
+            solution_wp = single_waypoint.solve()
+
+            current_solution= dict(solution_list[-1])
+            current_demands=solution_wp['waypoints_demand']
+            current_solution["execution_time"] += solution_wp["execution_time"]
+            current_solution["process_time"] += solution_wp["process_time"]
+            current_solution["objective"] = solution_wp["objective"]
+            current_solution["loads"] = solution_wp["loads"]
+            solution_list.append(current_solution)
+
+        return solution_list
+
+    def get_name(self):
+        """ returns name of algorithm """
+        return f"multi_waypoints"
