@@ -198,7 +198,9 @@ class McfDP(GenericDemandProvider):
         for sample in range(self.__n_samples):
             try:
                 yield self.demand_sequence(sample)
-            except:
+            except gb.GurobiError as ex:
+                raise ex
+            except Exception as ex:
                 continue
 
     def __len__(self):
