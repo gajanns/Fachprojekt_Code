@@ -92,7 +92,7 @@ def create_algo_c_map(plot_type:str):
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '4WP-JointHeur': "salmon",
+            '5WP-JointHeur': "salmon",
         }
     elif plot_type.startswith("all_topologies"):
         algo_map = {
