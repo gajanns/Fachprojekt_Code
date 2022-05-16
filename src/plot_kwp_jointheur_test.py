@@ -83,7 +83,6 @@ top_n_map = {
     "atmnet": "Atmnet"
 }
 
-
 def create_algo_c_map(plot_type:str):
     algo_map=dict()
     if plot_type.startswith("all_algorithms"):

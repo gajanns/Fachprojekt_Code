@@ -20,7 +20,6 @@ ACTIVE_PAIRS_FRACTION = 0.2
 K = 4
 OC = 3
 
-
 def get_demands_generator_mcf_maximal(n, links, active_pairs_fraction, seed):
     """ Creates a set of 10 samples of demands fitted to the capacity of the topology with MCF maximal """
     flows_per_pair = get_fpp(links)

@@ -4,7 +4,6 @@ import numpy as np
 from .demand_first_waypoints import DemandsFirstWaypoints
 from ..sr_factory import get_algorithm
 
-
 class kWayPointHeur(DemandsFirstWaypoints):
 
     def __init__(self, nodes: list, links: list, demands: list, weights: dict = None, k: int = 1, waypoints: dict = None ,**kwargs):
