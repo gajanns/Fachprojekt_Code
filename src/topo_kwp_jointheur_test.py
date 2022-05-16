@@ -1,6 +1,6 @@
 import os
 
-from algorithm.segment_routing.kwp_jointheur import kWPJOINTHeur
+from algorithm.segment_routing.topo_kwp_jointheur import TopoKWPJointHeur
 from demand import dp_factory
 from algorithm import sr_factory
 from utility import utility
@@ -17,8 +17,7 @@ DEMANDS_SAMPLES = 10
 ALGORITHM_TIME_OUT = 3600 * 4
 ACTIVE_PAIRS_FRACTION = 0.2
 
-K = 4
-OC = 3
+K:list = [0,1,2,3,4,5]
 
 def get_demands_generator_mcf_maximal(n, links, active_pairs_fraction, seed):
     """ Creates a set of 10 samples of demands fitted to the capacity of the topology with MCF maximal """
@@ -67,10 +66,10 @@ def work(algorithm_name, links, n, demands, ilp_method, setup, time_out, res_han
     try:
         nodes = list(range(n))
         if algorithm_name.startswith("kwp_jointheur"):
-            algorithm = kWPJOINTHeur(nodes=nodes, links=links, demands=demands, weights=None,
-                                      k=K)
+            algorithm = TopoKWPJointHeur(nodes=nodes, links=links, demands=demands, weights=None,
+                                         k_list=K)
             solutions=algorithm.solve()
-            result_dict.update(solutions[K])
+            result_dict.update(solutions[-1])
         else:
             algorithm = sr_factory.get_algorithm(
                 algorithm_name, nodes=nodes, links=links, demands=demands, ilp_method=ilp_method, time_out=time_out)
@@ -90,8 +89,8 @@ def work_kWP_cumulative(links, n, demands, ilp_method, setup, time_out, res_hand
 
     try:
         nodes = list(range(n))
-        algorithm = kWPJOINTHeur(nodes=nodes, links=links, demands=demands, weights=None,
-                                 k=K)
+        algorithm = TopoKWPJointHeur(nodes=nodes, links=links, demands=demands, weights=None,
+                                     k_list=K)
         solutions = algorithm.solve()
         for i,solution in enumerate(solutions):
             result_dict = dict()
@@ -110,7 +109,7 @@ def work_kWP_cumulative(links, n, demands, ilp_method, setup, time_out, res_hand
         res_handler.insert_result(result)
     return success, result_dict_list[-1]["objective"]
 
-def kwp_all_topologies_synthetic_demands():
+def topo_kwp_all_topologies_synthetic_demands():
     """ Sets up tests using all topology data having complete link capacity data from SNDLib and TopologyZoo.
         For these tests synthetic demands generated with MCF MAXIMAL are used.
         Each test instance is executed on 4 heuristic algorithms """
@@ -224,7 +223,7 @@ def geant_all_algorithms():
         ("inverse_capacity", ""),
         ("sequential_combination", ""),
         ("uniform_weights", ""),
-        ("kwp_jointheur_4", "")
+        ("kwp_jointheur_5", "")
     ]
 
     # topology provider setup
@@ -258,7 +257,7 @@ def geant_all_algorithms():
                 test_idx += 1
     return
 
-def kwp_real_demands():
+def topo_kwp_real_demands():
     """ Sets up tests using topology and demand data from snd_lib. The demand data is scaled with MCF MAXIMAL CONCURRENT
         Each test instance is executed  on 4 heuristic algorithms """
 
@@ -302,26 +301,18 @@ def kwp_real_demands():
             setup = get_setup_dict("", demands, demands_provider, links, ilp_method, n, sample_idx, test_idx,
                                    topology, topology_provider, 1, mcf_method, SEED)
             print(f"submit test: {test_idx} ({topology}, kwp_jointheur_{K}, D_idx = {sample_idx})")
-            success, objective = work_kwpo_cumulative(links.copy(), n, demands.copy(), ilp_method, setup,
+            success, objective = work_kWP_cumulative(links.copy(), n, demands.copy(), ilp_method, setup,
                                                       ALGORITHM_TIME_OUT, result_handler)
             print(f"Test-ID: {test_idx}, success: {success} [kwp_jointheur_{K}, "
                   f"{topology}, {sample_idx}]: objective: {round(objective, 4)}")
-            test_idx += K+1
-
-            setup["test_idx"]=test_idx
-            print(f"submit test: {test_idx} ({topology}, kwp_jointheur_{K}, D_idx = {sample_idx})")
-            success, objective = work_kwpo_cumulative(links.copy(), n, demands.copy(), ilp_method, setup,
-                                                      ALGORITHM_TIME_OUT, result_handler)
-            print(f"Test-ID: {test_idx}, success: {success} [kwp_jointheur_{K}, "
-                  f"{topology}, {sample_idx}]: objective: {round(objective, 4)}")
-            test_idx += K
+            test_idx += len(K)
     return
 
 def main():
     """ For each figure used in the paper we perform a single test-run comprising each multiple test instances """
     # Evaluation Fig. 3
     print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Topologies{CEND}:")
-    kwp_all_topologies_synthetic_demands()
+    topo_kwp_all_topologies_synthetic_demands()
 
     # Evaluation Fig. 4
     print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Abilene{CEND}:")
@@ -329,7 +320,7 @@ def main():
 
     # Evaluation Fig. 5
     print(f"Start {HIGHLIGHT}Scaled Real Demands - Abilene, Geant, Germany50{CEND}:")
-    kwp_real_demands()
+    topo_kwp_real_demands()
 
 if __name__ == '__main__':
     main()

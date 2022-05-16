@@ -92,27 +92,25 @@ def create_algo_c_map(plot_type:str):
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '4C-JointHeur': "salmon",
+            '4WP-JointHeur': "salmon",
         }
     elif plot_type.startswith("all_topologies"):
         algo_map = {
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '4C-JointHeur': "salmon",
+            '5WP-JointHeur': "salmon",
         }
     elif plot_type.startswith("real_demands"):
         algo_map = {
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '1C-JointHeur': "mediumseagreen",
-            '2D-JointHeur': "darkviolet",
-            '2C-JointHeur': "mediumorchid",
-            '3D-JointHeur': "darkgoldenrod",
-            '3C-JointHeur': "goldenrod",
-            '4D-JointHeur': "indianred",
-            '4C-JointHeur': "salmon",
+            '1WP-JointHeur': "mediumseagreen",
+            '2WP-JointHeur': "mediumorchid",
+            '3WP-JointHeur': "goldenrod",
+            '4WP-JointHeur': "salmon",
+            '5WP-JointHeur': "grey",
         }
     return algo_map
 
@@ -235,9 +233,7 @@ def prepare_data_and_plot(df, title, plot_type):
         df = df[df["algorithm"] != "inverse_capacity"]
 
 
-    df = df[df["algorithm"] != "kwpo_jointheur_0d"]
-    df = df[df["algorithm"] != "kwpo_jointheur_1d"]
-    df = df[df["algorithm"] != "kwpo_jointheur_0c"]
+    df = df[df["algorithm"] != "kwp_jointheur_0"]
 
     global algo_c_map
     algo_c_map=create_algo_c_map(plot_type)
@@ -250,13 +246,11 @@ def prepare_data_and_plot(df, title, plot_type):
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("SegmentIlp", "ILP")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("DemandFirstWaypoints", "GreedyWaypoints")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("SequentialCombination", "JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur4C", "4C-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur4D", "4D-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur3C", "3C-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur3D", "3D-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2C", "2C-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2D", "2D-JointHeur")
-    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur1C", "1C-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpJointheur5", "5WP-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpJointheur4", "4WP-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpJointheur3", "3WP-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpJointheur2", "2WP-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpJointheur1", "1WP-JointHeur")
 
     # beautify topology names
     df["topology_name"] = df["topology_name"].apply(lambda x: top_n_map[x])
