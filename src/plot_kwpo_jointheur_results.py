@@ -235,10 +235,11 @@ def prepare_data_and_plot(df, title, plot_type):
     if plot_type.startswith("all_topologies"):
         df = df[df["algorithm"] != "inverse_capacity"]
 
+    if plot_type.startswith("real_demands"):
+        df = df[df["algorithm"] != "kwpo_jointheur_0c"]
 
-    df = df[df["algorithm"] != "kwpo_jointheur_0d"]
-    df = df[df["algorithm"] != "kwpo_jointheur_1d"]
-    df = df[df["algorithm"] != "kwpo_jointheur_0c"]
+
+
 
     global algo_c_map
     algo_c_map=create_algo_c_map(plot_type)
@@ -257,7 +258,9 @@ def prepare_data_and_plot(df, title, plot_type):
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur3D", "3D-JointHeur")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2C", "2C-JointHeur")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur2D", "2D-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur1D", "JointHeur")
     df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur1C", "1C-JointHeur")
+    df["algorithm_complete"] = df["algorithm_complete"].str.replace("KwpoJointheur0D", "HeurOSPF")
 
     # beautify topology names
     df["topology_name"] = df["topology_name"].apply(lambda x: top_n_map[x])
@@ -343,7 +346,7 @@ if __name__ == "__main__":
         df_all_topologies = pd.DataFrame(JsonResultReader(data_all_topologies).fetch_results())
         raw_dfs_title.append((df_all_topologies, "MCF Synthetic Demands", "all_topologies"))
     else:
-        print(f"{utility.FAIL}results_all_topologies.json not existing in {dir_data}{utility.CEND}")
+        print(f"{utility.FAIL}results_kwpo_all_topologies.json not existing in {dir_data}{utility.CEND}")
 
     # figure (real_demands)
     data_real_demands = os.path.join(dir_data, "results_kwpo_real_demands.json")
@@ -351,7 +354,7 @@ if __name__ == "__main__":
         df_real_demands = pd.DataFrame(JsonResultReader(data_real_demands).fetch_results())
         raw_dfs_title.append((df_real_demands, "Scaled Real Demands", "real_demands"))
     else:
-        print(f"{utility.FAIL}results_real_demands.json not existing in {dir_data}{utility.CEND}")
+        print(f"{utility.FAIL}results_kwpo_real_demands.json not existing in {dir_data}{utility.CEND}")
     # start plot process for each dataframe
     for df_i, title_i, plot_type_i in raw_dfs_title:
         print(f"{HIGHLIGHT}{title_i} - {plot_type_i}{CEND}")

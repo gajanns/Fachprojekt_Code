@@ -3,7 +3,6 @@ import os
 from algorithm.segment_routing.kwpo_jointheur import KWPOJointHeur,SortSetting
 from demand import dp_factory
 from algorithm import sr_factory
-from utility import utility
 from topology import topology_factory
 from utility.json_result_handler import JsonResultWriter
 from utility.utility import HIGHLIGHT, CEND, FAIL, error_solution, get_setup_dict, get_fpp
@@ -17,8 +16,8 @@ DEMANDS_SAMPLES = 10
 ALGORITHM_TIME_OUT = 3600 * 4
 ACTIVE_PAIRS_FRACTION = 0.2
 
+# number of iterations of greedywpo
 K = 4
-OC = 3
 
 
 def get_demands_generator_mcf_maximal(n, links, active_pairs_fraction, seed):
@@ -59,6 +58,7 @@ def get_topology_generator(top_provider, tops_names, max_edges=None):
             continue
         yield links, n, topology_name
 
+
 def work(algorithm_name, links, n, demands, ilp_method, setup, time_out, res_handler,
          sortStrat:SortSetting=SortSetting.ByDemandValue):
     """ Thread worker method: starts a single test instance, i.e.,
@@ -88,6 +88,8 @@ def work(algorithm_name, links, n, demands, ilp_method, setup, time_out, res_han
 
 def work_kwpo_cumulative(links, n, demands, ilp_method, setup, time_out, res_handler,
                          sortStrat:SortSetting=SortSetting.ByDemandValue):
+    """ Thread worker method: starts multiple kwpo test instances, i.e.,
+        creates algorithm object and solves problem, appends the results to a json file """
     success = False
     result_dict_list=list()
 
@@ -115,7 +117,7 @@ def work_kwpo_cumulative(links, n, demands, ilp_method, setup, time_out, res_han
     return success, result_dict_list[-1]["objective"]
 
 def kwpo_all_topologies_synthetic_demands():
-    """ Sets up tests using all topology data having complete link capacity data from SNDLib and TopologyZoo.
+    """ Sets up tests using all topology data having complete link capacity data from SNDLib.
         For these tests synthetic demands generated with MCF MAXIMAL are used.
         Each test instance is executed on 4 heuristic algorithms """
 
@@ -144,7 +146,7 @@ def kwpo_all_topologies_synthetic_demands():
              "janos-us",  #: |E|: 84 , |V|: 26
              "dfn-bwin",  #: |E|: 90 , |V|: 10
              "france",  #: |E|: 90 , |V|: 25
-        #     "dfn-gwin",  #: |E|: 94 , |V|: 11
+        #     "dfn-gwin",  #: |E|: 94 , |V|: 11     # no time for that
         #     "newyork",  #: |E|: 98 , |V|: 16
         #     "norway",  #: |E|: 102, |V|: 27
         #     "sun",  #: |E|: 102, |V|: 27
@@ -158,38 +160,8 @@ def kwpo_all_topologies_synthetic_demands():
         #     "pioro40",  #: |E|: 178, |V|: 40
         #     "ta2",  #: |E|: 216, |V|: 65
         #     "brain",  #: |E|: 332, |V|: 161
-         ],
-
-        # TopologyZoo complete capacity information
-         "topology_zoo": [
-        #     "basnet",  #: |E|: 12 , |V|: 7
-        #     "cesnet1999",  #: |E|: 24 , |V|: 13
-        #     "kreonet",  #: |E|: 24 , |V|: 13
-        #     "eenet",  #: |E|: 26 , |V|: 13
-        #     "savvis",  #: |E|: 40 , |V|: 19
-        #     "atmnet",  #: |E|: 44 , |V|: 21
-        #     "uran",  #: |E|: 48 , |V|: 24
-        #     "amres",  #: |E|: 48 , |V|: 25
-        #     "karen",  #: |E|: 56 , |V|: 25
-        #     "rediris",  #: |E|: 62 , |V|: 19
-        #     "janetlense",  #: |E|: 68 , |V|: 20
-        #     "rnp",  #: |E|: 68 , |V|: 31
-        #     "kentmanjan2011",  #: |E|: 76 , |V|: 38
-        #     "myren",  #: |E|: 78 , |V|: 37
-        #     "belnet2006",  #: |E|: 82 , |V|: 23
-        #     "niif",  #: |E|: 82 , |V|: 36
-        #     "carnet",  #: |E|: 86 , |V|: 44
-        #     "sanet",  #: |E|: 90 , |V|: 43
-        #     "geant2009",  #: |E|: 104, |V|: 34
-        #     "renater2010",  #: |E|: 112, |V|: 43
-        #     "switchl3",  #: |E|: 126, |V|: 42
          ]
     }
-
-    #if not os.path.exists(
-    #        os.path.join(utility.BASE_PATH_ZOO_TOPOLOGY, f"{topology_map['topology_zoo'][0].title()}.graphml")):
-    #    print(f"{FAIL}The data from TopologyZoo is not available - pls follow the instruction in README.md{CEND}")
-    #    return
 
     # demand provider settings
     mcf_method = "maximal"
@@ -221,6 +193,9 @@ def kwpo_all_topologies_synthetic_demands():
     return
 
 def geant_all_algorithms():
+    """ Sets up tests for topology Geant (snd_lib) and synthetic demands using MCF MAXIMAL.
+        Each test instance is executed on all available algorithms """
+
     # algorithm settings
     algorithms = [  # ("algorithm_name", "ilp_method")
         ("demand_first_waypoints", ""),
@@ -264,19 +239,17 @@ def geant_all_algorithms():
 
 def kwpo_real_demands():
     """ Sets up tests using topology and demand data from snd_lib. The demand data is scaled with MCF MAXIMAL CONCURRENT
-        Each test instance is executed  on 4 heuristic algorithms """
+        Each test instance is executed  on GreedyWPO and all kWPO_JointHeur algorithms """
 
     # algorithm settings
     base_algorithms = [
         "demand_first_waypoints",
-        "heur_ospf_weights",
-        "sequential_combination",
     ]
     ilp_method = ""
 
     # topology provider setup
     topology_provider = "snd_lib"
-    topologies = ['geant']  # ['abilene', 'geant', 'germany50']
+    topologies = ['geant']  # ['abilene', 'geant', 'germany50'] # no time for that
     topology_generator = get_topology_generator(topology_provider, topologies)
 
     # demand provider setup
@@ -325,14 +298,14 @@ def main():
     """ For each figure used in the paper we perform a single test-run comprising each multiple test instances """
     # Evaluation Fig. 3
     print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Topologies{CEND}:")
-    kwpo_all_topologies_synthetic_demands()
+    #kwpo_all_topologies_synthetic_demands()
 
     # Evaluation Fig. 4
-    print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Abilene{CEND}:")
-    geant_all_algorithms()
+    print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Geant{CEND}:")
+    #geant_all_algorithms()
 
     # Evaluation Fig. 5
-    print(f"Start {HIGHLIGHT}Scaled Real Demands - Abilene, Geant, Germany50{CEND}:")
+    print(f"Start {HIGHLIGHT}Scaled Real Demands - Geant{CEND}:")
     kwpo_real_demands()
 
 if __name__ == '__main__':
