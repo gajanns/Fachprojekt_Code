@@ -92,14 +92,14 @@ def create_algo_c_map(plot_type:str):
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '5WP-JointHeur': "salmon",
+            '3WP-JointHeur': "salmon",
         }
     elif plot_type.startswith("all_topologies"):
         algo_map = {
             'HeurOSPF': "cornflowerblue",
             'GreedyWaypoints': "hotpink",
             'JointHeur': "seagreen",
-            '5WP-JointHeur': "salmon",
+            '3WP-JointHeur': "salmon",
         }
     elif plot_type.startswith("real_demands"):
         algo_map = {
@@ -282,7 +282,7 @@ def prepare_data_and_plot(df, title, plot_type):
         width = 6 + 1.5 * df['topology_name'].nunique()
 
         y_lim_top = 8.5
-        plot_file = os.path.join(out_path, f"kwpo_{plot_type}.pdf")
+        plot_file = os.path.join(out_path, f"kwp_{plot_type}.pdf")
         create_box_plot(df, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
                         y_label="Max. Normalized Link Utilization", fig_size=(width, 8),
                         title=title, y_lim_top=y_lim_top)
@@ -300,7 +300,7 @@ def prepare_data_and_plot(df, title, plot_type):
         y_lim_top = 5 if plot_type.startswith("all_algorithms") else 2.5 #None
         plot_file = os.path.join(out_path, f"kwpo_{plot_type}.pdf")
         if plot_type == "all_algorithms":
-            plot_file = os.path.join(out_path, f"kwpo_all_algorithms_geant.pdf")
+            plot_file = os.path.join(out_path, f"kwp_all_algorithms_geant.pdf")
         create_box_plot(df, "topology_name", "objective", "algorithm_complete", plot_file, x_label="",
                         y_label="Max. Normalized Link Utilization", fig_size=(8, 6), title=title,
                         y_lim_top=y_lim_top)

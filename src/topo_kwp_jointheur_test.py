@@ -18,6 +18,7 @@ ALGORITHM_TIME_OUT = 3600 * 4
 ACTIVE_PAIRS_FRACTION = 0.2
 
 K:list = [0,1,2,3,4,5]
+K_Single=3
 
 def get_demands_generator_mcf_maximal(n, links, active_pairs_fraction, seed):
     """ Creates a set of 10 samples of demands fitted to the capacity of the topology with MCF maximal """
@@ -69,7 +70,7 @@ def work(algorithm_name, links, n, demands, ilp_method, setup, time_out, res_han
             algorithm = TopoKWPJointHeur(nodes=nodes, links=links, demands=demands, weights=None,
                                          k_list=K)
             solutions=algorithm.solve()
-            result_dict.update(solutions[-1])
+            result_dict.update(solutions[K_Single])
         else:
             algorithm = sr_factory.get_algorithm(
                 algorithm_name, nodes=nodes, links=links, demands=demands, ilp_method=ilp_method, time_out=time_out)
@@ -119,7 +120,7 @@ def topo_kwp_all_topologies_synthetic_demands():
         "demand_first_waypoints",
         "heur_ospf_weights",
         "sequential_combination",
-        "kwp_jointheur_4"
+        "kwp_jointheur_"+str(K[K_Single])
     ]
     ilp_method = ""
 
@@ -223,7 +224,7 @@ def geant_all_algorithms():
         ("inverse_capacity", ""),
         ("sequential_combination", ""),
         ("uniform_weights", ""),
-        ("kwp_jointheur_5", "")
+        ("kwp_jointheur_"+str(K[K_Single]), "")
     ]
 
     # topology provider setup
