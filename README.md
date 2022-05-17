@@ -77,14 +77,11 @@ The results are stored in a JSON file located in **[out/](src)** after running t
 *Note: In the directory **[results_paper/](results_paper)** we provide the raw results obtained during our evaluations which we used in the publication.*
 
 ## Plot Results
-Create Plots from provided raw result data 
+Create Plots from provided raw result data in out/
 ```bash
-python3 plot_results.py [optional <data-dir> containing json result data]
+python3 plot_results.py
 ```
-*Note: By default, the script plots the raw result data used in Fig.3-5 in the paper. To plot the data created by running the main.py script, you can pass the directory containing the json files as parameter to the plotting script. E.g.:* 
-```bash
-python3 plot_results.py "../out/"
-```
+To use the precomputed data in the result_paper folder, copy it to out/
 
 <p float="left">
   <a href="https://www.acm.org/publications/policies/artifact-review-and-badging-current"><img src="/artifacts_available_v1_1.png" width="150" /></a>
