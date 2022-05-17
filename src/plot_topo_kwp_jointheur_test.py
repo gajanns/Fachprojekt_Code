@@ -12,7 +12,7 @@ from utility import utility
 from utility.json_result_handler import JsonResultReader
 from utility.utility import HIGHLIGHT, CEND
 
-DEFAULT_DIR_DATA = utility.create_dirs(f"../out")
+DEFAULT_DIR_DATA = utility.create_dirs(f"../results_paper/topo_kWP-JointHeur")
 DIR_PLOT = utility.create_dirs(f"../out/plots/alg2")
 
 # plot settings
@@ -307,7 +307,7 @@ def prepare_data_and_plot(df, title, plot_type):
     return
 
 
-if __name__ == "__main__":
+def main():
     # parse args
     if len(sys.argv) == 1:
         dir_data = DEFAULT_DIR_DATA
@@ -350,3 +350,6 @@ if __name__ == "__main__":
         print(f"{HIGHLIGHT}{title_i} - {plot_type_i}{CEND}")
         prepare_data_and_plot(df_i, title_i, plot_type_i)
         print()
+
+if __name__ == "__main__":
+    main()
