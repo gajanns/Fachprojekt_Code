@@ -48,12 +48,7 @@ We use traffic and topology data from SNDLib, which we redistribute under the [Z
 The data is stored in the directory **[data/](data)**.
 
 ### TopologyZoo Data
-Additionally, we use the topology data available from [TopologyZoo](http://www.topology-zoo.org/dataset.html).
-
-**Note:** The data from topology zoo is **NOT** included in the repository and must be manually added:
-1. Download the whole dataset: [Download](http://www.topology-zoo.org/files/archive.zip)
-2. Unzip the data
-3. Save the *.graphml files in the directory [data/topologies/topology_zoo](data/topologies/topology_zoo/))
+In contrast to the original project, we don't use data from TopologyZoo. THe reason is that the runtime of the tests is already large with just a subset of topologies in SNDLib.
 
 ## Install Python & Dependencies
 Create a conda environment and install all python dependencies using the provided environment.yml file:
