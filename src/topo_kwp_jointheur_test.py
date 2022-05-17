@@ -17,6 +17,7 @@ DEMANDS_SAMPLES = 10
 ALGORITHM_TIME_OUT = 3600 * 4
 ACTIVE_PAIRS_FRACTION = 0.2
 
+# test values for upper limit of wayppoints
 K:list = [0,1,2,3,4,5]
 K_Single=3
 
@@ -316,11 +317,11 @@ def main():
     topo_kwp_all_topologies_synthetic_demands()
 
     # Evaluation Fig. 4
-    print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Abilene{CEND}:")
+    print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Geant{CEND}:")
     geant_all_algorithms()
 
     # Evaluation Fig. 5
-    print(f"Start {HIGHLIGHT}Scaled Real Demands - Abilene, Geant, Germany50{CEND}:")
+    print(f"Start {HIGHLIGHT}Scaled Real Demands - Geant{CEND}:")
     topo_kwp_real_demands()
 
 if __name__ == '__main__':

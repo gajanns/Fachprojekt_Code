@@ -12,7 +12,7 @@ from utility import utility
 from utility.json_result_handler import JsonResultReader
 from utility.utility import HIGHLIGHT, CEND
 
-DEFAULT_DIR_DATA = utility.create_dirs(f"../results_paper/kWPO_JointHeur")
+DEFAULT_DIR_DATA = utility.create_dirs(f"../out")
 DIR_PLOT = utility.create_dirs(f"../out/plots/alg1")
 
 # plot settings
