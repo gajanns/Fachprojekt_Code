@@ -298,11 +298,11 @@ def main():
     """ For each figure used in the paper we perform a single test-run comprising each multiple test instances """
     # Evaluation Fig. 3
     print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Topologies{CEND}:")
-    #kwpo_all_topologies_synthetic_demands()
+    kwpo_all_topologies_synthetic_demands()
 
     # Evaluation Fig. 4
     print(f"Start {HIGHLIGHT}MCF Synthetic Demands - All Algorithms - Geant{CEND}:")
-    #geant_all_algorithms()
+    geant_all_algorithms()
 
     # Evaluation Fig. 5
     print(f"Start {HIGHLIGHT}Scaled Real Demands - Geant{CEND}:")
